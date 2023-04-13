@@ -1,0 +1,14 @@
+# actuator监控地址:http://localhost:83/actuator
+# prometheus监控地址:http://localhost:83/actuator/prometheus
+management:
+  server:
+    port: 83  # 监控端口
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+      base-path: /actuator
+
+spring:
+  application:
+    name: prometheus_demo
