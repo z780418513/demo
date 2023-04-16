@@ -1,0 +1,53 @@
+spring:
+  sharding-sphere:
+    datasource:
+      # 配置真实数据源
+      names: master,slave1,slave2
+      # 数据源1
+      master:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://localhost:3303/goods?allowPublicKeyRetrieval=true
+        username: root
+        password: root
+      # 数据源2
+      slave1:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://localhost:3304/goods?allowPublicKeyRetrieval=true
+        username: root
+        password: root
+      # 数据源3
+      slave2:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://localhost:3305/goods?allowPublicKeyRetrieval=true
+        username: root
+        password: root
+    # 规则
+    rules:
+      # 读写分离
+      - readwrite-splitting:
+          data-sources:
+            # 自定义读写规则名
+            my_readwrite_ds:
+              # 类型
+              type: Static
+              # 属性
+              props:
+                # 指定写的数据源 master
+                write-data-source-name: master
+                # 指定读的数据源 slave1,slave2
+                read-data-source-names: slave1,slave2
+              # 负载均衡算法名称 (自定义) alg_round
+              load-balancer-name: alg_round
+          load-balancers:
+            # 自定义 alg_round 负载均衡算法配置
+            alg_round:
+              type: ROUND_ROBIN
+
+    props:
+      #是否在日志中打印 SQL。
+      sql-show: true
+      #是否在日志中打印简单风格的 SQL。
+      sql-simple: true
