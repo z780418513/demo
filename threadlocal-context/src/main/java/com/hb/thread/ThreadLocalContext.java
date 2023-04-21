@@ -3,10 +3,11 @@ package com.hb.thread;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author zhaochengshui
- * @description
+ * @description threadLocal context , Used for thread-level data storage , reseat after use
  * @date 2023/4/20
  */
 public class ThreadLocalContext {
@@ -38,7 +39,8 @@ public class ThreadLocalContext {
         if (map == null || map.isEmpty()) {
             return null;
         }
-        return (T) map.get(key);
+        Object value = map.get(key);
+        return (T) value;
     }
 
     /**
@@ -54,6 +56,35 @@ public class ThreadLocalContext {
         }
         map.put(key, date);
         HOLDER_MAP.set(map);
+    }
+
+    /**
+     * 返回 thread local map
+     *
+     * @return thread local map
+     */
+    public static Map<String, Object> getHolderMap() {
+        return HOLDER_MAP.get();
+    }
+
+    /**
+     * 返回指定keys的map
+     *
+     * @param keys keys
+     * @return mapa
+     */
+    public static Map<String, Object> getHolderMapByKeys(String... keys) {
+        HashMap<String, Object> map = HOLDER_MAP.get();
+        HashMap<String, Object> newMap = new HashMap<>();
+        if (map == null || map.isEmpty()) {
+            return newMap;
+        }
+        for (String key : keys) {
+            if (map.containsKey(key)) {
+                newMap.put(key, map.get(key));
+            }
+        }
+        return newMap;
     }
 
     /**
