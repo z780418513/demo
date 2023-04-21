@@ -71,7 +71,7 @@ public class ThreadLocalContext {
      * 返回指定keys的map
      *
      * @param keys keys
-     * @return mapa
+     * @return map
      */
     public static Map<String, Object> getHolderMapByKeys(String... keys) {
         HashMap<String, Object> map = HOLDER_MAP.get();
