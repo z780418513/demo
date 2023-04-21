@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: stream-rocketmq-server
+  cloud:
+    # Spring Cloud Stream 配置项，对应 BindingServiceProperties 类
+    stream:
+      # Binding 配置项，对应 BindingProperties Map
+      bindings:
+        demo01-output:
+          destination: DEMO_TOPIC_01
+          content-type: application/json
+        demo01-input:
+          destination: DEMO_TOPIC_01
+          content-type: application/json
+          group: stream-rocketmq-server|demo01-output|consumer
+
+      # Spring Cloud Stream RocketMQ 配置项
+      rocketmq:
+        binder:
+          name-server: 127.0.0.1:9876 # RocketMQ Namesrv 地址
+        # RocketMQ 自定义 Binding 配置项，对应 RocketMQBindingProperties Map
+        bindings:
+          demo01-output:
+            # RocketMQ Producer 配置项，对应 RocketMQProducerProperties 类
+            producer:
+              group: stream-rocketmq-server|demo01-output|producer # 生产者分组
+              sync: true # 是否同步发送消息，默认为 false 异步。
+              vipChannelEnabled: false
+          demo01-input:
+            consumer:
+              enabled: true # 是否开启消费，默认为 true
+              broadcasting: false # 是否使用广播消费，默认为 false 使用集群消费
+              orderly: false
+
+
+server:
+  port: 18080
