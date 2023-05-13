@@ -7,11 +7,11 @@ import java.util.concurrent.*;
 
 /**
  * @author zhaochengshui
- * @description
+ * @description CompletableFuture 常用方法
  * @date 2023/5/11
  */
 @Slf4j
-public class CompleteFutureTaskTest {
+public class CompletableFutureTest {
     // 自定义线程池
     private ExecutorService threadPool = Executors.newFixedThreadPool(10);
 
