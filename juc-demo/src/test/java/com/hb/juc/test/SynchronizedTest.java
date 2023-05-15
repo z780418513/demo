@@ -7,21 +7,22 @@ import lombok.extern.slf4j.Slf4j;
  * @description
  * @date 2023/5/12
  */
-@Slf4j
 public class SynchronizedTest {
-
+    // 静态方法加锁 (类锁)
     public static synchronized void doLock() {
-        log.info("do static lock");
+        System.out.println("do static lock");
     }
 
+    // 代码块加锁 (对象锁)
     public void lock2() {
         synchronized (this) {
-            log.info("do lock2");
+            System.out.println("do lock2");
         }
     }
 
+    // 实例方法加锁 (对象锁)
     public synchronized void lock() {
-        log.info("do lock");
+        System.out.println("do lock");
     }
 
     public static void main(String[] args) {
