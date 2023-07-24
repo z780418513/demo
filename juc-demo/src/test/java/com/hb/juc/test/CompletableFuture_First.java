@@ -7,6 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * @author zhaochengshui
@@ -15,6 +16,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class CompletableFuture_First {
+    ReadWriteLock lock;
     @Test
     public void test1() throws ExecutionException, InterruptedException {
         FutureTask<Integer> futureTask = new FutureTask<Integer>(()->{
@@ -51,7 +53,6 @@ public class CompletableFuture_First {
     public void test3() throws ExecutionException, InterruptedException {
         CompletableFuture.supplyAsync(()->{
             log.info("CompletableFuture task start");
-
             try {
                 TimeUnit.SECONDS.sleep(3);
             } catch (InterruptedException e) {

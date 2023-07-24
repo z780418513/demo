@@ -1,5 +1,7 @@
 package com.hb.ftpdemo;
 
+import jdk.nashorn.internal.objects.annotations.Getter;
+import jdk.nashorn.internal.objects.annotations.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -8,6 +10,7 @@ import org.apache.commons.net.ftp.FTPReply;
 
 import java.io.*;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -18,32 +21,33 @@ import java.util.List;
  *
  * @author zhaochengshui
  */
+
 public class FTPUtil {
 
     /**
      * ftpClient对象
      */
-    private final FTPClient ftpClient;
+    private FTPClient ftpClient;
 
     /**
      * 主机名或者ip地址
      */
-    private final String host;
+    private  String host;
 
     /**
      * ftp服务器端口
      */
-    private final int port;
+    private  int port;
 
     /**
      * ftp用户名
      */
-    private final String username;
+    private  String username;
 
     /**
      * ftp密码
      */
-    private final String password;
+    private  String password;
 
     /**
      * 字符集
@@ -96,6 +100,10 @@ public class FTPUtil {
         this.username = StringUtils.isBlank(username) ? "anonymous" : username;
         this.password = password;
         this.ftpBasePath = ftpBasePath;
+    }
+
+    public FTPUtil() {
+
     }
 
     /**
@@ -260,7 +268,7 @@ public class FTPUtil {
      * @param ftpFileName 文件在ftp上的路径 如绝对路径 /home/ftpuser/123.txt 或者相对路径 123.txt
      * @param in          输入流
      */
-    private void storeFile(String ftpFileName, InputStream in) throws IOException {
+    public void storeFile(String ftpFileName, InputStream in) throws IOException {
         try {
             if (!ftpClient.storeFile(ftpFileName, in)) {
                 throw new IOException("Can't upload file '" + ftpFileName + "' to FTP server. Check FTP permissions and path.");
@@ -533,7 +541,7 @@ public class FTPUtil {
      *
      * @param stream 流
      */
-    private static void closeStream(Closeable stream) {
+    public static void closeStream(Closeable stream) {
         if (stream != null) {
             try {
                 stream.close();
@@ -549,11 +557,105 @@ public class FTPUtil {
     public void disconnect() {
         if (null != ftpClient && ftpClient.isConnected()) {
             try {
-                ftpClient.logout();
+                boolean logout = ftpClient.logout();
                 ftpClient.disconnect();
             } catch (IOException ex) {
                 // do nothing
             }
         }
+    }
+
+    /**
+     * 上传文件 支持断点续传
+     *
+     * @param localFilePath  本地文件
+     * @param remoteFilePath 远程文件
+     * @throws Exception
+     */
+    public void upload(String localFilePath, String remoteFilePath) throws Exception {
+        ftpClient.changeWorkingDirectory("/ccc/ddd");
+        FTPFile[] files = ftpClient.listFiles(remoteFilePath);
+        long beginSize = 0;
+        long endSize = 0;
+        // 文件已存在
+        if (files.length == 1) {
+            beginSize = files[0].getSize();
+        }
+        File file = new File(localFilePath);
+        endSize = file.length();
+        writeByUnit(remoteFilePath, file, beginSize, endSize);
+    }
+
+    /**
+     * 包装ftpClient
+     *
+     * @param ftpClient ftpClient
+     * @return FTPUtil
+     */
+    public static FTPUtil warpFtpClient(FTPClient ftpClient) {
+        FTPUtil ftpUtil = new FTPUtil();
+        ftpUtil.setFtpClient(ftpClient);
+        return ftpUtil;
+    }
+
+    /**
+     * 上传文件到服务器,新上传和断点续传
+     *
+     * @param remoteFile 远程文件名，在上传之前已经将服务器工作目录做了改变
+     * @param localFile  本地文件File句柄，绝对路径
+     * @return
+     * @throws IOException
+     */
+
+    private void writeByUnit(String remoteFile, File localFile, long beginSize, long endSize) throws Exception {
+        long localSize = localFile.length();
+        //等待写入的文件大小
+        long writeSize = endSize - beginSize;
+        if (writeSize <= 0) {
+//            throw new CreateException(1, "文件指针参数出错");
+        }
+
+        //获取百分单位是 1-100
+        try (RandomAccessFile raf = new RandomAccessFile(localFile, "r");
+             OutputStream out = ftpClient.appendFileStream(new String(remoteFile.getBytes("GBK"), StandardCharsets.ISO_8859_1));) {
+            //把文件指针移动到 开始位置
+            ftpClient.setRestartOffset(beginSize);
+            raf.seek(beginSize);
+
+            //定义最小移动单位是 1024字节 也就是1kb
+            byte[] bytes = new byte[1024 * 10];
+            int c;
+            double finishSize = 0;
+            double finishPercent = 0;
+            long timeMillis = System.currentTimeMillis();
+
+            //存在一个bug 当分布移动的时候  可能会出现下载重复的问题 后期需要修改
+            while ((c = raf.read(bytes)) != -1) {
+                out.write(bytes, 0, c);
+                finishSize += c;
+                if (finishSize > writeSize) {
+                    finishPercent = 1;
+                    System.out.println(">>>>>完成进度AAA:" + finishPercent);
+                    break;
+                }
+
+                if ((finishSize / localSize) - finishPercent > 0.01) {
+                    finishPercent = finishSize / writeSize;
+                    System.out.println(">>>>>完成进度BBB:" + finishPercent);
+                }
+
+            }
+            out.flush();
+            long cost = System.currentTimeMillis() - timeMillis;
+            System.out.println("cost = " + cost);
+        }
+    }
+
+    public FTPClient getFtpClient() {
+        return ftpClient;
+    }
+
+    public void setFtpClient(FTPClient ftpClient) {
+        this.ftpClient = ftpClient;
     }
 }

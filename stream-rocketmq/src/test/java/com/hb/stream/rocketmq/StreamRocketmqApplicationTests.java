@@ -15,7 +15,10 @@ class StreamRocketmqApplicationTests {
 
     @Test
     void sendMessage() {
-        rocketMQService.sendMessage(SourceSinkConst.DEMO01_OUTPUT,"aaa", JSON.toJSONString("发送测试消息"));
+        for (int i = 0; i < 10; i++) {
+            rocketMQService.sendMessage(SourceSinkConst.DEMO01_OUTPUT, "aaa", JSON.toJSONString("发送测试消息" + i));
+
+        }
     }
 
 }

@@ -13,6 +13,9 @@ spring:
           destination: DEMO_TOPIC_01
           content-type: application/json
           group: stream-rocketmq-server|demo01-output|consumer
+          consumer:
+            concurrency: 5
+
 
       # Spring Cloud Stream RocketMQ 配置项
       rocketmq:

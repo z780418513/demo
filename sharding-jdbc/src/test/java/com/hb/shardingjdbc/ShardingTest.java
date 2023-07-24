@@ -35,7 +35,7 @@ public class ShardingTest {
             s.setName("张三");
             s.setStatus("1");
             s.setTearchid(10);
-            s.setClassName("E009");
+            s.setClassName("E010");
             String uuid = UUID.randomUUID().toString().replace("-", "");
             s.setStNo(uuid);
             studentMapper.insert(s);
@@ -70,5 +70,10 @@ public class ShardingTest {
         for (Object o : studentMapper.selectList(result)) {
             System.out.println("查询结果：" + o);
         }
+    }
+
+    @Test
+    public void createTable() {
+        ShardingAlgorithmTool.createShardingTableAndReload(ShardingTableCacheEnum.STUDENT,"aaa");
     }
 }

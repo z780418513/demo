@@ -1,0 +1,5 @@
+aliyun:
+  access-key-id: LTAI5tFxBCXqKfqfackkTkCS
+  enable-oss: true
+  access-key-secret: xvgQJEdUoj8SfuBEdJG8ixB83yaJrt
+  endpoint: https://oss-cn-hangzhou.aliyuncs.com

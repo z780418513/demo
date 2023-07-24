@@ -114,7 +114,11 @@ public class CompletableFutureTest {
             return 1;
         }, threadPool).handle((value, e) -> {
             log.info("步骤二");
-            int i = 1 / 0;  // 会直接结束任务
+//            int i = 1 / 0;  // 会直接结束任务
+            if (value == 1){
+                throw new RuntimeException();
+            }
+
             return value + 2;
         }).handle((value, e) -> {
             if (e != null) {
