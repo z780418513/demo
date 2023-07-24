@@ -4,7 +4,7 @@ public class MyLockTest {
 
     static int count = 0;
     public static void main(String[] args) throws InterruptedException {
-        MyLock lock = new MyLock();
+        MutexLock lock = new MutexLock();
 
         Runnable r = () -> {
             try {
