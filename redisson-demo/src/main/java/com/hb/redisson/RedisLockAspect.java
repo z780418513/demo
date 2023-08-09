@@ -10,23 +10,21 @@
 
 package com.hb.redisson;
 
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.extra.spring.SpringUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.lang.reflect.Method;
 
 /**
- * @author lgh
+ * 分布式锁AOP
+ *
+ * @author zhaochengshui
  */
 @Aspect
 @Component
@@ -41,12 +39,15 @@ public class RedisLockAspect {
     public Object around(ProceedingJoinPoint joinPoint, RedisLock redisLock) throws Throwable {
 
         Object result = null;
+        // 代理对象
         Object target = joinPoint.getTarget();
+        // 代理方法
         Method method = getMethod(joinPoint);
+        // 代理方法参数
         Object[] args = joinPoint.getArgs();
-        String lockKey = SpelUtils.parse(target, redisLock.lockName(), method, args );
+        String lockId = SpelUtils.parse(target, redisLock.lockKeyId(), method, args);
 
-        RLock lock = redissonClient.getLock(REDISSON_LOCK_PREFIX + lockKey);
+        RLock lock = redissonClient.getLock(REDISSON_LOCK_PREFIX + redisLock.lockKey() + lockId);
         try {
             boolean isLock = lock.tryLock(redisLock.waitTime(), redisLock.leaseTime(), redisLock.timeUnit());
             if (isLock) {

@@ -13,10 +13,16 @@ import java.util.concurrent.TimeUnit;
 @Documented
 public @interface RedisLock {
 
+
     /**
-     * redis锁 名字
+     * redis锁 标识符
      */
-    String lockName() default "";
+    String lockKey() default "";
+
+    /**
+     * redis锁 id
+     */
+    String lockKeyId() default "";
 
     /**
      * 等待时间
