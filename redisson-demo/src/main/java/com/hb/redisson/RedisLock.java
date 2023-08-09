@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 使用redis进行分布式锁
+ *
  * @author lanhai
  */
 @Target(ElementType.METHOD)
@@ -12,27 +13,29 @@ import java.util.concurrent.TimeUnit;
 @Documented
 public @interface RedisLock {
 
-	/**
-	 * redis锁 名字
-	 */
-	String lockName() default "";
+    /**
+     * redis锁 名字
+     */
+    String lockName() default "";
 
-	/**
-	 * redis锁 key 支持spel表达式
-	 */
-	String key() default "";
+    /**
+     * 等待时间
+     *
+     * @return 默认5
+     */
+    long waitTime() default 5L;
 
-	/**
-	 * 过期秒数,默认为5毫秒
-	 *
-	 * @return 轮询锁的时间
-	 */
-	int expire() default 5000;
+    /**
+     * 持有锁时间
+     *
+     * @return 默认5
+     */
+    long leaseTime() default 5L;
 
-	/**
-	 * 超时时间单位
-	 *
-	 * @return 秒
-	 */
-	TimeUnit timeUnit() default TimeUnit.MILLISECONDS;
+    /**
+     * 超时时间单位
+     *
+     * @return 默认秒
+     */
+    TimeUnit timeUnit() default TimeUnit.SECONDS;
 }

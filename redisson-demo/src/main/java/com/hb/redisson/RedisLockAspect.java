@@ -11,6 +11,7 @@
 package com.hb.redisson;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Around;
@@ -21,6 +22,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.lang.reflect.Method;
 
 /**
@@ -30,42 +32,55 @@ import java.lang.reflect.Method;
 @Component
 public class RedisLockAspect {
 
-	@Autowired
-	private RedissonClient redissonClient;
+    @Resource
+    private RedissonClient redissonClient;
 
-	private static final String REDISSON_LOCK_PREFIX = "redisson_lock:";
+    private static final String REDISSON_LOCK_PREFIX = "redisson_lock:";
 
-	@Around("@annotation(redisLock)")
-	public Object around(ProceedingJoinPoint joinPoint, RedisLock redisLock) throws Throwable {
-		String spel = redisLock.key();
-		String lockName = redisLock.lockName();
+    @Around("@annotation(redisLock)")
+    public Object around(ProceedingJoinPoint joinPoint, RedisLock redisLock) throws Throwable {
 
-		RLock rLock = redissonClient.getLock(getRedisKey(joinPoint,lockName,spel));
+        Object result = null;
+        Object target = joinPoint.getTarget();
+        Method method = getMethod(joinPoint);
+        Object[] args = joinPoint.getArgs();
+        String lockKey = SpelUtils.parse(target, redisLock.lockName(), method, args );
 
-		rLock.lock(redisLock.expire(),redisLock.timeUnit());
+        RLock lock = redissonClient.getLock(REDISSON_LOCK_PREFIX + lockKey);
+        try {
+            boolean isLock = lock.tryLock(redisLock.waitTime(), redisLock.leaseTime(), redisLock.timeUnit());
+            if (isLock) {
+                //执行方法
+                result = joinPoint.proceed();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            // 只能解锁自己的
+            if (lock.isLocked() && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
 
-		Object result = null;
-		try {
-			//执行方法
-			result = joinPoint.proceed();
+        return result;
+    }
 
-		} finally {
-			rLock.unlock();
-		}
-		return result;
-	}
+    private Method getMethod(ProceedingJoinPoint joinPoint) {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+        if (method.getDeclaringClass().isInterface()) {
+            try {
+                method = joinPoint
+                        .getTarget()
+                        .getClass()
+                        .getDeclaredMethod(joinPoint.getSignature().getName(),
+                                method.getParameterTypes());
+            } catch (SecurityException | NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return method;
+    }
 
-	/**
-	 * 将spel表达式转换为字符串
-	 * @param joinPoint 切点
-	 * @return redisKey
-	 */
-	private String getRedisKey(ProceedingJoinPoint joinPoint,String lockName,String spel) {
-		Signature signature = joinPoint.getSignature();
-		MethodSignature methodSignature = (MethodSignature) signature;
-		Method targetMethod = methodSignature.getMethod();
-		Object target = joinPoint.getTarget();
-		Object[] arguments = joinPoint.getArgs();
-		return REDISSON_LOCK_PREFIX + lockName + StrUtil.COLON + SpelUtil.parse(target,spel, targetMethod, arguments);
-	}
+
 }

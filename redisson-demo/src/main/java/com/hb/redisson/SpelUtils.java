@@ -1,31 +1,22 @@
-/*
- * Copyright (c) 2018-2999 广州市蓝海创新科技有限公司 All rights reserved.
- *
- * https://www.mall4j.com/
- *
- * 未经允许，不可做商业用途！
- *
- * 版权所有，侵权必究！
- */
-
 package com.hb.redisson;
 
-import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.StrUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.expression.MethodBasedEvaluationContext;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 /**
- * 解析SPEL 表达式
- * @author huxingnan
- * @date 2018/5/21 10:51
+ * @author SYM
+ * @date 2022/6/6 9:09
+ * @Description EpEL工具类
  */
-public class SpelUtil {
+public class SpelUtils {
 
     /**
      * 支持 #p0 参数索引的表达式解析
@@ -36,14 +27,14 @@ public class SpelUtil {
      * @return 解析后的字符串
      */
     public static String parse(Object rootObject,String spel, Method method, Object[] args) {
-        if (StrUtil.isBlank(spel)) {
-            return StrUtil.EMPTY;
+        if (StringUtils.isEmpty(StringUtils.trim(spel))) {
+            return StringUtils.EMPTY;
         }
         //获取被拦截方法参数名列表(使用Spring支持类库)
         LocalVariableTableParameterNameDiscoverer u =
                 new LocalVariableTableParameterNameDiscoverer();
         String[] paraNameArr = u.getParameterNames(method);
-        if (ArrayUtil.isEmpty(paraNameArr)) {
+        if (CollectionUtils.isEmpty(Arrays.asList(paraNameArr))) {
             return spel;
         }
         //使用SPEL进行key的解析

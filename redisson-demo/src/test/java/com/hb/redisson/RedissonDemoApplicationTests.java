@@ -12,7 +12,7 @@ class RedissonDemoApplicationTests {
 
     @Test
     void contextLoads() {
-        aService.doaaa();
+        aService.doaaa("11");
     }
 
 }
